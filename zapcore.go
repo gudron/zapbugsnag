@@ -42,7 +42,9 @@ type trace struct {
 
 type core struct {
 	zapcore.Level
+	enc zapcore.Encoder
 	trace
+
 
 	fields map[string]interface{}
 	tags   map[string]string
@@ -80,8 +82,14 @@ func (c *core) Write(ent zapcore.Entry, fs []zapcore.Field) error {
 				continue
 			}
 
-			meta.Add(field.Key, "value string", field.String)
-			meta.Add(field.Key, "value int", field.Integer)
+			metaFields := []zapcore.Field{field}
+			buf, err := c.enc.EncodeEntry(ent, metaFields)
+			if err != nil {
+				return err
+			}
+
+			meta.Add(field.Key, "value", string(buf.Bytes()))
+			buf.Free()
 		}
 	}
 
