@@ -43,8 +43,8 @@ type trace struct {
 type core struct {
 	zapcore.Level
 	enc zapcore.Encoder
+	encoderConfig zapcore.EncoderConfig
 	trace
-
 
 	fields map[string]interface{}
 	tags   map[string]string
@@ -58,6 +58,7 @@ func newCore(cfg Configuration, enab zapcore.Level) *core {
 		trace:  cfg.Trace,
 		fields: make(map[string]interface{}),
 		tags:   cfg.Tags,
+		encoderConfig: cfg.EncoderConfig,
 	}
 	return Core
 }
@@ -82,14 +83,10 @@ func (c *core) Write(ent zapcore.Entry, fs []zapcore.Field) error {
 				continue
 			}
 
-			metaFields := []zapcore.Field{field}
-			buf, err := c.enc.EncodeEntry(ent, metaFields)
-			if err != nil {
-				return err
-			}
+			enc := zapcore.NewMapObjectEncoder()
+			field.AddTo(enc)
 
-			meta.Add(field.Key, "value", string(buf.Bytes()))
-			buf.Free()
+			meta.AddStruct(field.Key,  enc.Fields)
 		}
 	}
 

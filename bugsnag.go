@@ -8,6 +8,8 @@ import (
 // Configuration is a minimal set of parameters for Sentry integration.
 type Configuration struct {
 	bugsnag.Configuration
+
+	EncoderConfig zapcore.EncoderConfig
 	Tags            map[string]string
 	Trace           trace
 	MinimalLogLevel *zapcore.Level
